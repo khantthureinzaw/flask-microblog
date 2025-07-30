@@ -1,0 +1,22 @@
+# Virtual environment
+venv/
+.venv/
+
+# Byte-code files
+*.pyc
+__pycache__/
+
+# Flask specific
+instance/
+.flaskenv
+
+# Python-specific
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+dist/
+build/
+
+# Operating System files
+.DS_Store
+.env
