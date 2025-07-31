@@ -20,3 +20,7 @@ build/
 # Operating System files
 .DS_Store
 .env
+
+#Log files
+*.log 
+logs/
