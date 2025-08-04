@@ -24,3 +24,5 @@ build/
 #Log files
 *.log 
 logs/
+
+messages.pot
