@@ -20,8 +20,9 @@
 <hr>
 
 <!-- List of Comments -->
-<h3>Comments ({{ post.comments|length }})</h3>
-{% for comment in post.comments %}
+
+<h3>Comments ({{ post.comment_count() }})</h3>
+{% for comment in comments %}
 <div class="mb-2">
     <a href="{{ url_for('user', username=comment.author.username) }}"><strong>{{ comment.author.username }}</strong></a>
     <small>{{ moment(comment.timestamp).format('LLL') }}</small>
@@ -30,5 +31,19 @@
 {% else %}
 <p>No comments yet. Be the first to comment!</p>
 {% endfor %}
+<nav aria-label="Post navigation">
+    <ul class="pagination">
+        <li class="page-item{% if not prev_url %} disabled{% endif %}">
+            <a href="{{ prev_url }}" class="page-link">
+                <span aria-hidden="true">&larr;</span> {{ _('Newer posts') }}
+            </a>
+        </li>
+        <li class="page-item{% if not next_url %} disabled{% endif %}">
+            <a href="{{ next_url }}" class="page-link">
+                {{ _('Older posts') }} <span aria-hidden="true">&rarr;</span>
+            </a>
+        </li>
+    </ul>
+</nav>
 
 {% endblock %}

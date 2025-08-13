@@ -119,6 +119,14 @@ class Post(db.Model):
     def __repr__(self) -> str:
         return f'<Post {self.body}>'
     
+    def get_comments(self, ascending: bool = True):
+        order = Comment.timestamp.asc() if ascending else Comment.timestamp.desc()
+        return sa.select(Comment).where(Comment.post_id == self.id).order_by(order)
+    
+    def comment_count(self):
+        query = sa.select(sa.func.count()).where(Comment.post_id == self.id)
+        return db.session.scalar(query)
+    
 @login.user_loader
 def load_user(id):
     return db.session.get(User, int(id))

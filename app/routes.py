@@ -44,13 +44,18 @@ def index():
     return render_template('index.html', title='Home', posts=posts, form=form, next_url=next_url, prev_url=prev_url)
 
 @app.route('/post/<post_id>')
-@login_required
 def post_detail(post_id):
     post = db.first_or_404(sa.select(Post).where(
         Post.id == post_id
     ))
     form = CommentForm()
-    return render_template('post_detail.html', title=post.title, post=post, form=form)
+
+    # Show Comments
+    page = request.args.get('page', 1, type=int)
+    comments = db.paginate(post.get_comments(), page=page, per_page=app.config['POSTS_PER_PAGE'], error_out=False)
+    next_url = url_for('post_detail', page=comments.next_num) if comments.has_next else None
+    prev_url = url_for('post_detail', page=comments.prev_num) if comments.has_prev else None
+    return render_template('post_detail.html', title=post.title, post=post, form=form, comments=comments, next_url=next_url, prev_url=prev_url)
 
 @app.route('/post/<post_id>/comment', methods=['GET', 'POST'])
 @login_required
@@ -65,10 +70,10 @@ def make_comment(post_id):
         db.session.commit()
         flash(_('You comment is now live!'))
         return redirect(url_for('post_detail', post_id=post_id))
+    return render_template('post_detail.html', title=post.title, post=post, form=form)
 
 
 @app.route('/explore')
-@login_required
 def explore():
     page = request.args.get('page', 1, type=int)
     query = sa.select(Post).order_by(Post.timestamp.desc())
