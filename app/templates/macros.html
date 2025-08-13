@@ -1,0 +1,54 @@
+{% macro post_card(post, current_user) %}
+<div class="card mb-3">
+    <div class="card-body">
+        <h5 class="card-title">{{ post.author.username }}</h5>
+        <p class="card-text">{{ post.body }}</p>
+        <p class="text-muted">
+            {{ post.timestamp.strftime('%Y-%m-%d %H:%M UTC') }}
+            {% if post.user_id == current_user.id %}
+            | <a href="#">Edit</a>
+            {% endif %}
+            | Upvotes: {{ post.upvoters|length }}
+        </p>
+
+        {{ upvote_form(post.id) }}
+
+        {% if current_user.role in ['admin', 'moderator'] and not post.is_approved %}
+        {{ approve_form(post.id) }}
+        {% endif %}
+
+        <hr>
+        <h6>Comments:</h6>
+        {% for comment in post.comments %}
+        <p><strong>{{ comment.author.username }}:</strong> {{ comment.body }} <small class="text-muted">{{
+                comment.timestamp.strftime('%Y-%m-%d %H:%M UTC') }}</small></p>
+        {% endfor %}
+
+        {{ comment_form(post.id) }}
+    </div>
+</div>
+{% endmacro %}
+
+{% macro upvote_form(post_id) %}
+<form method="POST" action="{{ url_for('upvote_post', post_id=post_id) }}">
+    {{ form.hiddentag() }}
+    <button class="btn btn-sm btn-outline-success" type="submit">Upvote</button>
+</form>
+{% endmacro %}
+
+{% macro approve_form(post_id) %}
+<form method="POST" action="{{ url_for('approve_post', post_id=post_id) }}" class="mt-2">
+    {{ form.hiddentag() }}
+    <button class="btn btn-sm btn-outline-primary">Approve Post</button>
+</form>
+{% endmacro %}
+
+{% macro comment_form(post_id) %}
+<form method="POST" action="{{ url_for('add_comment', post_id=post_id) }}">
+    {{ form.hiddentag() }}
+    <div class="mb-2">
+        <input type="text" name="body" class="form-control" placeholder="Add a comment..." required>
+    </div>
+    <button class="btn btn-sm btn-secondary" type="submit">Comment</button>
+</form>
+{% endmacro %}

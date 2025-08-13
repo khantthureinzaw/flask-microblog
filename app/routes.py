@@ -3,10 +3,10 @@ from urllib.parse import urlsplit
 from flask import flash, redirect, render_template, request, url_for, g
 from flask_babel import get_locale
 from app import app
-from app.forms import EmptyForm, LoginForm, PostForm, RegistrationForm, EditProfileForm, ResetPasswordForm, ResetPasswordRequestForm
+from app.forms import CommentForm, EmptyForm, LoginForm, PostForm, RegistrationForm, EditProfileForm, ResetPasswordForm, ResetPasswordRequestForm
 from flask_login import current_user, login_required, login_user, logout_user
 from app import db
-from app.models import User, Post
+from app.models import Comment, User, Post
 from app.email import send_password_reset_email
 import sqlalchemy as sa
 from flask_babel import _
@@ -27,7 +27,7 @@ def index():
     # Upload posts
     form = PostForm()
     if form.validate_on_submit():
-        post = Post(body=form.post.data, author=current_user)
+        post = Post(title=form.title.data, body=form.post.data, author=current_user)
         db.session.add(post)
         db.session.commit()
         flash(_('Your post is now live!'))
@@ -42,6 +42,30 @@ def index():
     prev_url = url_for('index', page=posts.prev_num) \
         if posts.has_prev else None
     return render_template('index.html', title='Home', posts=posts, form=form, next_url=next_url, prev_url=prev_url)
+
+@app.route('/post/<post_id>')
+@login_required
+def post_detail(post_id):
+    post = db.first_or_404(sa.select(Post).where(
+        Post.id == post_id
+    ))
+    form = CommentForm()
+    return render_template('post_detail.html', title=post.title, post=post, form=form)
+
+@app.route('/post/<post_id>/comment', methods=['GET', 'POST'])
+@login_required
+def make_comment(post_id):
+    post = db.first_or_404(sa.select(Post).where(
+        Post.id == post_id
+    ))
+    form = CommentForm()
+    if form.validate_on_submit():
+        comment = Comment(body=form.body.data, author=current_user, post=post)
+        db.session.add(comment)
+        db.session.commit()
+        flash(_('You comment is now live!'))
+        return redirect(url_for('post_detail', post_id=post_id))
+
 
 @app.route('/explore')
 @login_required
@@ -175,14 +199,14 @@ def follow(username):
             sa.select(User).where(User.username == username)
         )
         if user is None:
-            flash(_('User %(username) is not found.'), username=username)
+            flash(_('User %(username)s is not found.') % {'username': username})
             return redirect(url_for('index'))
         if user == current_user:
             flash(_('You cannot follow yourself!'))
             return redirect(url_for('user', username=username))
         current_user.follow(user)
         db.session.commit()
-        flash(_('You are following %(username)!'), username=username)
+        flash(_('You are following %(username)s!') % {'username': username})
         return redirect(url_for('user', username=username))
     else:
         return redirect(url_for('index'))
@@ -196,14 +220,14 @@ def unfollow(username):
             sa.select(User).where(User.username == username)
         )
         if user is None:
-            flash(_('User %(username) is not found.'), username=username)
+            flash(_('User %(username)s is not found.') % {'username': username})
             return redirect(url_for('index'))
         if user == current_user:
             flash(_('You cannot unfollow yourself!'))
             return redirect(url_for('user', username=username))
         current_user.unfollow(user)
         db.session.commit()
-        flash(_('You are not following %(username).'), username=username)
+        flash(_('You are not following %(username)s.') % {'username': username})
         return redirect(url_for('user', username=username))
     else:
         return redirect(url_for('index'))

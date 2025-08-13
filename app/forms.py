@@ -55,11 +55,16 @@ class EmptyForm(FlaskForm):
     submit = SubmitField(_l('Submit'))
 
 class PostForm(FlaskForm):
+    title = StringField(_l('Title'), validators=[DataRequired(), Length(min=1, max=200)])
     post = TextAreaField(_l('Say something'), validators=[
         DataRequired(),
-        Length(min=1, max=140)
+        Length(min=1, max=500)
     ])
-    submit = SubmitField(_l('Submit'))
+    submit = SubmitField(_l('Post'))
+
+class CommentForm(FlaskForm):
+    body = TextAreaField(_l('Comment'), validators=[DataRequired(), Length(min=1, max=200)])
+    submit = SubmitField(_l('Post Comment!'))
 
 class ResetPasswordRequestForm(FlaskForm):
     email = StringField(_l('Email'), validators=[DataRequired(), Email()])

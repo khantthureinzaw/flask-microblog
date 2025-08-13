@@ -1,4 +1,5 @@
 from hashlib import md5
+from typing import List
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timezone
 import sqlalchemy as sa
@@ -35,6 +36,7 @@ class User(UserMixin, db.Model):
         secondaryjoin=(followers.c.follower_id == id),
         back_populates='following'
     )
+    comments: so.WriteOnlyMapped['Comment'] = so.relationship(back_populates='author')
 
     def __repr__(self) -> str:
         return f'<User {self.username}>'
@@ -104,13 +106,15 @@ class User(UserMixin, db.Model):
     
 class Post(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
-    body: so.Mapped[str] = so.mapped_column(sa.String(140))
+    title: so.Mapped[str] = so.mapped_column(sa.String(200))
+    body: so.Mapped[str] = so.mapped_column(sa.String(500))
     timestamp: so.Mapped[datetime] = so.mapped_column(
         index=True,
         default=lambda: datetime.now(timezone.utc)
     )
     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id), index=True)
     author: so.Mapped[User] = so.relationship(back_populates='posts')
+    comments: so.Mapped[List['Comment']] = so.relationship(back_populates='post')
 
     def __repr__(self) -> str:
         return f'<Post {self.body}>'
@@ -118,3 +122,15 @@ class Post(db.Model):
 @login.user_loader
 def load_user(id):
     return db.session.get(User, int(id))
+
+class Comment(db.Model):
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    body: so.Mapped[str] = so.mapped_column(sa.String(200))
+    timestamp: so.Mapped[datetime] = so.mapped_column(
+        index=True,
+        default=lambda: datetime.now(timezone.utc)
+    )
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id), index=True)
+    post_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Post.id), index=True)
+    author: so.Mapped[User] = so.relationship(back_populates='comments')
+    post: so.Mapped[Post] = so.relationship(back_populates='comments')
