@@ -19,18 +19,18 @@
         {% for post in posts.items %}
         <tr>
             <td>
-                <a href="{{ url_for('admin_post_detail', post_id=post.id) }}">
+                <a href="{{ url_for('admin.admin_post_detail', post_id=post.id) }}">
                     {{ post.title }}
                 </a>
             </td>
             <td>{{ post.author.username }}</td>
             <td>{{ post.timestamp }}</td>
             <td class="d-flex gap-2">
-                <form action="{{ url_for('approve_post', post_id=post.id) }}" method="post">
+                <form action="{{ url_for('admin.approve_post', post_id=post.id) }}" method="post">
                     {{ form.hidden_tag() }}
                     <button type="submit" class="btn btn-success btn-sm">{{ _('Approve') }}</button>
                 </form>
-                <form action="{{ url_for('delete_post', post_id=post.id) }}" method="post">
+                <form action="{{ url_for('admin.delete_post', post_id=post.id) }}" method="post">
                     {{ form.hidden_tag() }}
                     <button type="submit" class="btn btn-danger btn-sm">{{ _('Delete') }}</button>
                 </form>

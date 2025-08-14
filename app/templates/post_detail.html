@@ -4,18 +4,26 @@
 {% block content %}
 <h1>{{ post.title }}</h1>
 <small>
-    By: <a href="{{ url_for('user', username=post.author.username) }}">
+    By: <a href="{{ url_for('main.user', username=post.author.username) }}">
         {{ post.author.username }}
     </a> | {{ moment(post.timestamp).format('LLL') }}
 </small>
+{% if current_user.is_admin %}
+<form method="post" action="{{ url_for('admin.delete_post', post_id=post.id) }}" style="display:inline;">
+    {{ form.hidden_tag() }}
+    <input type="hidden" name="next" value="{{ url_for('admin.admin_dashboard') }}">
+    <button type="submit" class="btn btn-danger float-end">Delete</button>
+</form>
+{% endif %}
 <hr>
 <p>
     {{ post.body }}
 </p>
 
+<hr>
 <!-- Comment Form -->
 <h3>Leave a comment</h3>
-{{ wtf.quick_form(form, action=url_for('make_comment', post_id=post.id)) }}
+{{ wtf.quick_form(form, action=url_for('main.make_comment', post_id=post.id)) }}
 
 <hr>
 
@@ -24,9 +32,23 @@
 <h3>Comments ({{ post.comment_count() }})</h3>
 {% for comment in comments %}
 <div class="mb-2">
-    <a href="{{ url_for('user', username=comment.author.username) }}"><strong>{{ comment.author.username }}</strong></a>
+    <a href="{{ url_for('main.user', username=comment.author.username) }}">
+        <strong>{{ comment.author.username }}</strong>
+    </a>
     <small>{{ moment(comment.timestamp).format('LLL') }}</small>
-    <p>{{ comment.body }}</p>
+    {% if current_user.is_admin %}
+    <form method="post" action="{{ url_for('admin.delete_comment', comment_id=comment.id) }}" style="display:inline;">
+        {{ form.hidden_tag() }}
+        <input type="hidden" name="next" value="{{ url_for('main.post_detail', post_id=post.id) }}">
+        <button type="submit" class="btn btn-danger btn-sm my-1">Delete</button>
+    </form>
+    {% endif %}
+    <div class="card">
+        <div class="card-body">
+            <p>{{ comment.body }}</p>
+        </div>
+    </div>
+
 </div>
 {% else %}
 <p>No comments yet. Be the first to comment!</p>
