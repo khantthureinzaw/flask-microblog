@@ -41,6 +41,17 @@
                         <a class="nav-link" aria-current="page"
                             href="{{ url_for('user', username=current_user.username) }}">{{ _('Profile') }}</a>
                     </li>
+                    {% if not current_user.is_anonymous %}
+                    {% if current_user.is_admin|default(False) %}
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-sm btn-warning text-dark fw-bold" aria-current="page"
+                            href="{{ url_for('admin_dashboard') }}">
+                            {{ _('Admin Dashboard') }}
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% endif %}
+
                     <li class="nav-item">
                         <a class="nav-link" aria-current="page" href="{{ url_for('logout') }}">{{ _('Logout') }}</a>
                     </li>

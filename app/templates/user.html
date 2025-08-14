@@ -32,9 +32,19 @@
         </td>
     </tr>
 </table>
+
+<h3>{{ _('Posts') }}</h3>
 {% for post in posts %}
 {% include '_post.html' %}
 {% endfor %}
+
+{% if user == current_user and pending_posts %}
+<h3>{{ _('Pending Posts') }}</h3>
+{% for post in pending_posts %}
+{% include '_post.html' %}
+{% endfor %}
+{% endif %}
+
 <nav aria-label="Post navigation">
     <ul class="pagination">
         <li class="page-item{% if not prev_url %} disabled{% endif %}">

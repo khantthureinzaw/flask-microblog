@@ -10,6 +10,9 @@ import logging
 from logging.handlers import SMTPHandler, RotatingFileHandler
 import os
 
+from sqlalchemy import event
+from sqlalchemy.engine import Engine
+
 def get_locale():
     return request.accept_languages.best_match(app.config['LANGUAGES'])
 
@@ -22,6 +25,12 @@ login.login_view = 'login'
 mail = Mail(app)
 moment = Moment(app)
 babel = Babel(app, locale_selector=get_locale)
+
+@event.listens_for(Engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
 
 if not app.debug:
     if app.config['MAIL_SERVER']:
@@ -44,7 +53,7 @@ if not app.debug:
         os.mkdir('logs')
     file_handler = RotatingFileHandler('logs/microblob.log', maxBytes=10240, backupCount=10)
     file_handler.setFormatter(logging.Formatter(
-        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:(lineo)d]'
+        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:(lineno)d]'
     ))
     file_handler.setLevel(logging.INFO)
     app.logger.info('Microblog startup')

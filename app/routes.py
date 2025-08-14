@@ -3,7 +3,7 @@ from urllib.parse import urlsplit
 from flask import flash, redirect, render_template, request, url_for, g
 from flask_babel import get_locale
 from app import app
-from app.forms import CommentForm, EmptyForm, LoginForm, PostForm, RegistrationForm, EditProfileForm, ResetPasswordForm, ResetPasswordRequestForm
+from app.forms import ApprovePostForm, CommentForm, EmptyForm, LoginForm, PostForm, RegistrationForm, EditProfileForm, ResetPasswordForm, ResetPasswordRequestForm
 from flask_login import current_user, login_required, login_user, logout_user
 from app import db
 from app.models import Comment, User, Post
@@ -19,6 +19,10 @@ def before_request():
         db.session.commit()
         g.locale = str(get_locale())
 
+#######################
+# Blog Routes
+#######################
+
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/index', methods=['GET', 'POST'])
 @login_required
@@ -27,7 +31,11 @@ def index():
     # Upload posts
     form = PostForm()
     if form.validate_on_submit():
-        post = Post(title=form.title.data, body=form.post.data, author=current_user)
+        post = Post(
+            title=form.title.data, 
+            body=form.post.data, 
+            author=current_user, 
+            is_approved=True if getattr(current_user, "is_admin", False) else False)
         db.session.add(post)
         db.session.commit()
         flash(_('Your post is now live!'))
@@ -76,7 +84,7 @@ def make_comment(post_id):
 @app.route('/explore')
 def explore():
     page = request.args.get('page', 1, type=int)
-    query = sa.select(Post).order_by(Post.timestamp.desc())
+    query = sa.select(Post).where(Post.is_approved.is_(True)).order_by(Post.timestamp.desc())
     posts = db.paginate(query, page=page,
                         per_page=app.config['POSTS_PER_PAGE'], error_out=False)
     next_url = url_for('explore', page=posts.next_num) \
@@ -84,6 +92,10 @@ def explore():
     prev_url = url_for('explore', page=posts.prev_num) \
         if posts.has_prev else None
     return render_template('index.html', title='Explore', posts=posts, next_url=next_url, prev_url=prev_url)
+
+#######################
+# Auth Routes
+#######################
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -166,18 +178,28 @@ def user(username):
         User.username == username
     ))
     page = request.args.get('page', 1, type=int)
-    query = user.posts.select().order_by(Post.timestamp.desc())
-    posts = db.paginate(query, page=page,
+
+    # Approved posts
+    approved_query = user.posts.select().where(Post.is_approved.is_(True)).order_by(Post.timestamp.desc())
+    approved_posts = db.paginate(approved_query, page=page,
                         per_page=app.config['POSTS_PER_PAGE'],
                         error_out=False)
-    next_url = url_for('user', username=user.username, page=posts.next_num) \
-        if posts.has_next else None
-    prev_url = url_for('user', username=user.username, page=posts.prev_num) \
-        if posts.has_prev else None
+    next_url = url_for('user', username=user.username, page=approved_posts.next_num) \
+        if approved_posts.has_next else None
+    prev_url = url_for('user', username=user.username, page=approved_posts.prev_num) \
+        if approved_posts.has_prev else None
+    
+    # Pending posts (only if the user is viewing their own profile)
+    pending_posts = None
+    if user == current_user:
+        pending_query = user.posts.select().where(Post.is_approved.is_(False)).order_by(Post.timestamp.desc())
+        pending_posts = db.paginate(pending_query, page=page, 
+                                    per_page=app.config['POSTS_PER_PAGE'],
+                                    error_out=False)
     
 
     form = EmptyForm()
-    return render_template('user.html', user=user, posts=posts, form=form, next_url=next_url, prev_url=prev_url)
+    return render_template('user.html', user=user, posts=approved_posts, pending_posts=pending_posts, form=form, next_url=next_url, prev_url=prev_url)
 
 @app.route('/edit_profile', methods=['GET', 'POST'])
 @login_required
@@ -194,6 +216,11 @@ def edit_profile():
         form.about_me.data = current_user.about_me
 
     return render_template('edit_profile.html', title='Edit Profile', form=form)
+
+
+#######################
+# Follow / Unfollow
+#######################
 
 @app.route('/follow/<username>', methods=['POST'])
 @login_required
@@ -236,3 +263,82 @@ def unfollow(username):
         return redirect(url_for('user', username=username))
     else:
         return redirect(url_for('index'))
+    
+#######################
+# Admin Routes
+#######################
+@app.route('/admin/dashboard', methods=['GET', 'POST'])
+@login_required
+def admin_dashboard():
+    if not getattr(current_user, 'is_admin', False):
+        flash(_('You do not have permission to access this page.'))
+        return redirect(url_for('index'))
+    
+    form = ApprovePostForm()
+    page = request.args.get('page', 1, type=int)
+
+    # Pending Posts (not approved)
+    pending_posts_query = sa.select(Post).where(Post.is_approved.is_(False)).order_by(Post.timestamp.desc())
+    pending_posts = db.paginate(
+        pending_posts_query,
+        page = page,
+        per_page=app.config['POSTS_PER_PAGE'],
+        error_out=False
+    )
+    next_url = url_for('admin_dashboard', page=pending_posts.next_num) if pending_posts.has_next else None
+    prev_url = url_for('admin_dashboard', page=pending_posts.prev_num) if pending_posts.has_prev else None
+
+    return render_template(
+        'admin_dashboard.html',
+        title='Admin Dashboard',
+        posts=pending_posts,
+        form=form,
+        next_url=next_url,
+        prev_url=prev_url
+    )
+
+@app.route('/admin/approve_post/<int:post_id>', methods=['POST'])
+@login_required
+def approve_post(post_id):
+    if not getattr(current_user, 'is_admin', False):
+        flash(_('You do not have permission to access this page.'))
+        return redirect(url_for('index'))
+    
+    post = db.session.get(Post, post_id)
+    if post:
+        post.is_approved = True
+        db.session.commit()
+        flash(_('Post Approved'))
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/delete_post/<int:post_id>', methods=['POST'])
+@login_required
+def delete_post(post_id):
+    if not getattr(current_user, 'is_admin', False):
+        flash(_('You do not have permission to access this page.'))
+        return redirect(url_for('index'))
+    
+    post = db.session.get(Post, post_id)
+    if post:
+        db.session.delete(post)
+        db.session.commit()
+        flash(_('Post Deleted'))
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/post/<post_id>', methods=['GET', 'POST'])
+@login_required
+def admin_post_detail(post_id):
+    if not getattr(current_user, 'is_admin', False):
+        flash(_('You do not have permission to access this page.'))
+        return redirect(url_for('index'))
+    
+    post = db.first_or_404(sa.select(Post).where(
+        Post.id == post_id
+    ))
+    form = ApprovePostForm()
+    return render_template(
+        'admin_post_detail.html',
+        title=f'Approve {post.title}',
+        post=post,
+        form=form
+    )

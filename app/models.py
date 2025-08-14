@@ -12,8 +12,8 @@ import jwt
 followers = sa.Table(
     'followers',
     db.metadata,
-    sa.Column('follower_id', sa.Integer, sa.ForeignKey('user.id'), primary_key=True),
-    sa.Column('followed_id', sa.Integer, sa.ForeignKey('user.id'), primary_key=True)
+    sa.Column('follower_id', sa.Integer, sa.ForeignKey('user.id', ondelete="CASCADE"), primary_key=True),
+    sa.Column('followed_id', sa.Integer, sa.ForeignKey('user.id', ondelete="CASCADE"), primary_key=True)
 )
 
 class User(UserMixin, db.Model):
@@ -21,7 +21,8 @@ class User(UserMixin, db.Model):
     username: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, unique=True)
     email: so.Mapped[str] = so.mapped_column(sa.String(120), index=True, unique=True)
     password_hash: so.Mapped[str | None] = so.mapped_column(sa.String(256))
-    posts: so.WriteOnlyMapped['Post'] = so.relationship(back_populates='author')
+    is_admin: so.Mapped[bool] = so.mapped_column(default=False)
+    posts: so.WriteOnlyMapped['Post'] = so.relationship(back_populates='author', cascade='all, delete-orphan')
     about_me: so.Mapped[str | None] = so.mapped_column(sa.String(140))
     last_seen: so.Mapped[datetime | None] = so.mapped_column(
         default=lambda: datetime.now(timezone.utc)
@@ -36,7 +37,7 @@ class User(UserMixin, db.Model):
         secondaryjoin=(followers.c.follower_id == id),
         back_populates='following'
     )
-    comments: so.WriteOnlyMapped['Comment'] = so.relationship(back_populates='author')
+    comments: so.WriteOnlyMapped['Comment'] = so.relationship(back_populates='author', cascade='all, delete-orphan')
 
     def __repr__(self) -> str:
         return f'<User {self.username}>'
@@ -99,8 +100,8 @@ class User(UserMixin, db.Model):
             .where(sa.or_(
                 Follower.id == self.id,
                 Author.id == self.id,
-            ))
-            .group_by(Post)
+            ), Post.is_approved.is_(True))
+            .distinct(Post.id)
             .order_by(Post.timestamp.desc())
         )
     
@@ -112,9 +113,10 @@ class Post(db.Model):
         index=True,
         default=lambda: datetime.now(timezone.utc)
     )
-    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id), index=True)
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id, ondelete="CASCADE"), index=True)
     author: so.Mapped[User] = so.relationship(back_populates='posts')
-    comments: so.Mapped[List['Comment']] = so.relationship(back_populates='post')
+    comments: so.Mapped[List['Comment']] = so.relationship(back_populates='post', cascade='all, delete-orphan')
+    is_approved: so.Mapped[bool] = so.mapped_column(default=False)
 
     def __repr__(self) -> str:
         return f'<Post {self.body}>'
@@ -138,7 +140,7 @@ class Comment(db.Model):
         index=True,
         default=lambda: datetime.now(timezone.utc)
     )
-    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id), index=True)
-    post_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Post.id), index=True)
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id, ondelete="CASCADE"), index=True)
+    post_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Post.id, ondelete="CASCADE"), index=True)
     author: so.Mapped[User] = so.relationship(back_populates='comments')
     post: so.Mapped[Post] = so.relationship(back_populates='comments')

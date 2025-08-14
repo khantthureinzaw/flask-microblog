@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% import "bootstrap_wtf.html" as wtf %}
+
+{% block content %}
+<h1>{{ _('Post Details') }}</h1>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <strong>{{ post.title }}</strong>
+        <small class="text-muted">{{ _('by') }} {{ post.author.username }} - {{ post.timestamp }}</small>
+    </div>
+    <div class="card-body">
+        <p>{{ post.body }}</p>
+    </div>
+</div>
+
+<div class="d-flex gap-2">
+    <form action="{{ url_for('approve_post', post_id=post.id) }}" method="post">
+        {{ form.hidden_tag() }}
+        <button type="submit" class="btn btn-success">{{ _('Approve') }}</button>
+    </form>
+
+    <form action="{{ url_for('delete_post', post_id=post.id) }}" method="post">
+        {{ form.hidden_tag() }}
+        <button type="submit" class="btn btn-danger">{{ _('Delete') }}</button>
+    </form>
+
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">{{ _('Back to Dashboard') }}</a>
+</div>
+
+{% endblock %}
