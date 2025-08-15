@@ -1,0 +1,42 @@
+/* fonts */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f8f9fa;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: 'Montserrat', sans-serif;
+}
+
+.btn,
+.navbar-brand,
+.nav-link {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+}
+
+/* navbar */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* layout */
+.content-wrapper {
+    min-height: calc(100vh - 160px);
+    /* keeps footer at bottom */
+}
+
+footer {
+    background-color: #fff;
+    border-top: 1px solid #dee2e6;
+    padding: 1rem 0;
+    text-align: center;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
