@@ -1,4 +1,4 @@
-<table class="table table-hover">
+<!-- <table class="table table-hover">
     <tr>
         <td width="70px">
             <a href="{{ url_for('main.user', username=post.author.username) }}">
@@ -25,4 +25,36 @@
             </a>
         </td>
     </tr>
-</table>
+</table> -->
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <div class="d-flex align-items-start">
+            <!-- Avatar -->
+            <a href="{{ url_for('main.user', username=post.author.username) }}">
+                <img src="{{ post.author.avatar(60) }}" alt="{{ post.author.username }}'s avatar"
+                    class="rounded-circle me-3 border" style="width:60px; height:60px; object-fit:cover;">
+            </a>
+
+            <div class="flex-grow-1">
+                <!-- Author + Timestamp -->
+                <div class="mb-1">
+                    <a href="{{ url_for('main.user', username=post.author.username) }}" class="fw-semibold text-dark">
+                        {{ post.author.username }}
+                    </a>
+                    <small class="text-muted ms-2">{{ moment(post.timestamp).fromNow() }}</small>
+                </div>
+
+                <!-- Post Title -->
+                <a href="{{ url_for('main.post_detail', post_id=post.id) }}" class="text-decoration-none">
+                    <h5 class="card-title mb-2">{{ post.title }}</h5>
+                </a>
+
+                <!-- Post Excerpt -->
+                <p class="card-text text-muted">
+                    {{ post.body | truncate(150, True, '...') }}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

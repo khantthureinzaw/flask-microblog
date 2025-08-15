@@ -2,6 +2,26 @@
 {% import 'bootstrap_wtf.html' as wtf %}
 
 {% block content %}
-<h1>{{ _('Register') }}</h1>
-{{ wtf.quick_form(form) }}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h2 class="fw-bold mb-3 text-center">{{ _('Register') }}</h2>
+                    <p class="text-muted text-center mb-4">
+                        Create your account to start posting and following other users.
+                    </p>
+                    {{ wtf.quick_form(form) }}
+                    <hr>
+                    <div class="text-center">
+                        <p>
+                            {{ _('Already have an account?') }}
+                            <a href="{{ url_for('auth.login') }}">{{ _('Sign In here') }}</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

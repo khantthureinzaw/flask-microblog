@@ -2,11 +2,27 @@
 {% import "bootstrap_wtf.html" as wtf %}
 
 {% block content %}
-<h1>{{ _('Sign In') }}</h1>
-{{ wtf.quick_form(form) }}
-<p>{{ _('New User') }} <a href="{{ url_for('auth.register') }}">{{ _('Click to Register!') }}</a></p>
-<p>
-    Forgot Your Password?
-    <a href="{{ url_for('auth.reset_password_request') }}">{{ _('Click to Reset It') }}</a>
-</p>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h2 class="fw-bold mb-3 text-center">{{ _('Sign In') }}</h2>
+                    <p class="text-muted text-center mb-4">Enter your credentials to access your account.</p>
+                    {{ wtf.quick_form(form) }}
+                    <hr>
+                    <div class="text-center">
+                        <p class="mb-2">{{ _('New User?') }}
+                            <a href="{{ url_for('auth.register') }}">{{ _('Register here') }}</a>
+                        </p>
+                        <p>
+                            {{ _('Forgot your password?') }}
+                            <a href="{{ url_for('auth.reset_password_request') }}">{{ _('Reset it') }}</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

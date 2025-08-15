@@ -1,6 +1,13 @@
 {% extends "base.html" %}
+
 {% block content %}
-<h1>{{ _('An unexpected error has occured') }}</h1>
-<p>{{ _('The administrator has been notified. Sorry for the inconvenience!') }}</p>
-<p><a href="{{ url_for('main.index') }}">Back</a></p>
+<div class="container py-5 text-center">
+    <h1 class="display-1 text-danger">500</h1>
+    <h2>{{ _('Something went wrong') }}</h2>
+    <p class="lead">{{ _('An unexpected error has occurred. The administrator has been notified.') }}</p>
+    <p>{{ _('We apologize for the inconvenience.') }}</p>
+    <a href="{{ url_for('main.index') }}" class="btn btn-primary mt-3">
+        {{ _('Back to Home') }}
+    </a>
+</div>
 {% endblock %}

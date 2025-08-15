@@ -2,19 +2,39 @@
 {% import "bootstrap_wtf.html" as wtf %}
 
 {% block content %}
-{% if current_user.is_anonymous %}
-<h1>Welcome to Microblog!</h1>
-{% else %}
-<h1>{{ _('Hi, %(username)s!', username=current_user.username) }}</h1>
-{% endif %}
+<div class="mb-4 text-center">
+    {% if current_user.is_anonymous %}
+    <h1 class="fw-bold display-5 mb-3">Welcome to Microblog!</h1>
+    <p class="text-muted fs-5">Join the community and start sharing your thoughts.</p>
+    {% else %}
+    <h1 class="fw-bold display-6 mb-3">{{ _('Hi, %(username)s!', username=current_user.username) }}</h1>
+    <p class="text-muted">Here's what's new today.</p>
+    {% endif %}
+</div>
 {% if form %}
-{{ wtf.quick_form(form) }}
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <h5 class="card-title mb-3">{{ _('Create a new post') }}</h5>
+        {{ wtf.quick_form(form) }}
+    </div>
+</div>
 {% endif %}
-{% for post in posts %}
-{% include '_post.html' %}
-{% endfor %}
-<nav aria-label="Post navigation">
-    <ul class="pagination">
+
+<div class="post-list">
+    {% for post in posts %}
+    <div class="mb-4">
+        {% include '_post.html' %}
+    </div>
+    {% else %}
+    <div class="text-center text-muted py-5">
+        <em>No posts yet. Be the first to share something!</em>
+    </div>
+    {% endfor %}
+</div>
+
+{% if posts %}
+<nav aria-label="Post navigation" class="mt-4">
+    <ul class="pagination justify-content-center">
         <li class="page-item{% if not prev_url %} disabled{% endif %}">
             <a href="{{ prev_url }}" class="page-link">
                 <span aria-hidden="true">&larr;</span> {{ _('Newer posts') }}
@@ -27,4 +47,5 @@
         </li>
     </ul>
 </nav>
+{% endif %}
 {% endblock %}

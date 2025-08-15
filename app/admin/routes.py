@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 from flask import current_app, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from flask_babel import _
@@ -5,7 +6,58 @@ import sqlalchemy as sa
 from app import db
 from app.admin.forms import ApprovePostForm
 from app.admin import bp
-from app.models import Comment, Post
+from app.main.forms import EmptyForm
+from app.models import Comment, Post, User
+
+def admin_required():
+    if not getattr(current_user, 'is_admin', False):
+        flash(_('You do not have permission to access this page.'))
+        return False
+    return True
+
+@bp.route('/admin/all_posts')
+@login_required
+def all_posts():
+    if not admin_required():
+        return redirect(url_for('main.index'))
+    
+    page = request.args.get('page', 1, type=int)
+    posts_query = sa.select(Post).order_by(Post.timestamp.desc())
+    posts = db.paginate(posts_query, page=page, per_page=current_app.config['POSTS_PER_PAGE'], error_out=False)
+    form = EmptyForm()
+    
+    next_url = url_for('admin.all_posts', page=posts.next_num) if posts.has_next else None
+    prev_url = url_for('admin.all_posts', page=posts.prev_num) if posts.has_prev else None
+    
+    return render_template(
+        'admin/all_posts.html',
+        title='All Posts',
+        posts=posts,
+        next_url=next_url,
+        prev_url=prev_url,
+        form=form
+    )
+
+@bp.route('/admin/all_users')
+@login_required
+def all_users():
+    if not admin_required():
+        return redirect(url_for('main.index'))
+    
+    page = request.args.get('page', 1, type=int)
+    users_query = sa.select(User).order_by(User.username.asc())
+    users = db.paginate(users_query, page=page, per_page=current_app.config['POSTS_PER_PAGE'], error_out=False)
+    
+    next_url = url_for('admin.all_users', page=users.next_num) if users.has_next else None
+    prev_url = url_for('admin.all_users', page=users.prev_num) if users.has_prev else None
+ 
+    return render_template(
+        'admin/all_users.html',
+        title='All Users',
+        users=users,
+        next_url=next_url,
+        prev_url=prev_url
+    )
 
 @bp.route('/admin/dashboard', methods=['GET', 'POST'])
 @login_required
@@ -28,13 +80,22 @@ def admin_dashboard():
     next_url = url_for('admin.admin_dashboard', page=pending_posts.next_num) if pending_posts.has_next else None
     prev_url = url_for('admin.admin_dashboard', page=pending_posts.prev_num) if pending_posts.has_prev else None
 
+    total_users = db.session.scalar(sa.select(sa.func.count()).select_from(User))
+
+    yesterday = datetime.now(timezone.utc) - timedelta(days=1)
+    active_today = db.session.scalar(
+    sa.select(sa.func.count()).select_from(User).where(User.last_seen >= yesterday)
+    )
+
     return render_template(
         'admin/admin_dashboard.html',
         title='Admin Dashboard',
         posts=pending_posts,
         form=form,
         next_url=next_url,
-        prev_url=prev_url
+        prev_url=prev_url,
+        total_users=total_users,
+        active_today=active_today
     )
 
 @bp.route('/admin/approve_post/<int:post_id>', methods=['POST'])

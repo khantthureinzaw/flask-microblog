@@ -1,62 +1,95 @@
 {% extends "base.html" %}
 
 {% block content %}
-<table class="table table-hover">
-    <tr>
-        <td width="256px"><img src="{{ user.avatar(256) }}"></td>
-        <td>
-            <h1>{{ _('User') }}: {{ user.username }}</h1>
-            {% if user.about_me %}<p>{{ user.about_me }}</p>{% endif %}
+<div class="container py-4">
+    <div class="row align-items-center mb-4">
+        <div class="col-md-3 text-center">
+            <img src="{{ user.avatar(256) }}" class="rounded-circle img-fluid shadow-sm" alt="User avatar">
+        </div>
+        <div class="col-md-9">
+            <h1 class="fw-bold">{{ user.username }}</h1>
+            {% if user.about_me %}
+            <p class="text-muted">{{ user.about_me }}</p>
+            {% endif %}
             {% if user.last_seen %}
-            <p>{{ _('Last seen on:') }} {{ moment(user.last_seen).format('LLL') }}</p>
+            <p class="small text-secondary mb-1">
+                Last seen: {{ moment(user.last_seen).format('LLL') }}
+            </p>
             {% endif %}
-            <p>{{ _('%(count)d followers', count=user.followers_count()) }}, {{ _('%(count)d following',
-                count=user.following_count()) }}</p>
+            <p>
+                <span class="badge bg-primary">{{ user.followers_count() }} Followers</span>
+                <span class="badge bg-secondary">{{ user.following_count() }} Following</span>
+            </p>
+
             {% if user == current_user %}
-            <p><a href="{{ url_for('main.edit_profile') }}">{{ _('Edit your profile') }}</a></p>
+            <a href="{{ url_for('main.edit_profile') }}" class="btn btn-outline-primary btn-sm">Edit Profile</a>
             {% elif not current_user.is_following(user) %}
-            <p>
-            <form action="{{ url_for('main.follow', username=user.username) }}" method="post">
+            <form action="{{ url_for('main.follow', username=user.username) }}" method="post" class="d-inline">
                 {{ form.hidden_tag() }}
-                {{ form.submit(value='Follow', class_='btn btn-primary') }}
+                <button type="submit" class="btn btn-primary btn-sm">Follow</button>
             </form>
-            </p>
             {% else %}
-            <p>
-            <form action="{{ url_for('main.unfollow', username=user.username) }}" method="post">
+            <form action="{{ url_for('main.unfollow', username=user.username) }}" method="post" class="d-inline">
                 {{ form.hidden_tag() }}
-                {{ form.submit(value='Unfollow', class_='btn btn-primary') }}
+                <button type="submit" class="btn btn-outline-danger btn-sm">Unfollow</button>
             </form>
-            </p>
             {% endif %}
-        </td>
-    </tr>
-</table>
+        </div>
+    </div>
 
-<h3>{{ _('Posts') }}</h3>
-{% for post in posts %}
-{% include '_post.html' %}
-{% endfor %}
+    <hr>
 
-{% if user == current_user and pending_posts %}
-<h3>{{ _('Pending Posts') }}</h3>
-{% for post in pending_posts %}
-{% include '_post.html' %}
-{% endfor %}
-{% endif %}
+    <h3 class="mb-3">Posts</h3>
+    <div class="row g-3">
+        {% for post in posts %}
+        <div class="col-12">
+            {% include '_post.html' %}
+        </div>
+        {% else %}
+        <p class="text-muted">No posts yet...</p>
+        {% endfor %}
+    </div>
 
-<nav aria-label="Post navigation">
-    <ul class="pagination">
-        <li class="page-item{% if not prev_url %} disabled{% endif %}">
-            <a class="page-link" href="{{ prev_url }}">
-                <span aria-hidden="true">&larr;</span> {{ _('Newer posts') }}
-            </a>
-        </li>
-        <li class="page-item{% if not next_url %} disabled{% endif %}">
-            <a class="page-link" href="{{ next_url }}">
-                {{ _('Older posts') }} <span aria-hidden="true">&rarr;</span>
-            </a>
-        </li>
-    </ul>
-</nav>
+    <nav aria-label="Post navigation" class="mt-3">
+        <ul class="pagination justify-content-center">
+            <li class="page-item{% if not prev_url %} disabled{% endif %}">
+                <a class="page-link" href="{{ prev_url }}">
+                    &larr; Newer posts
+                </a>
+            </li>
+            <li class="page-item{% if not next_url %} disabled{% endif %}">
+                <a class="page-link" href="{{ next_url }}">
+                    Older posts &rarr;
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    {% if user == current_user and pending_posts %}
+    <hr>
+    <h3 class="mb-3">Pending Posts</h3>
+    <div class="row g-3">
+        {% for post in pending_posts %}
+        <div class="col-12">
+            {% include '_post.html' %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <nav aria-label="Pending post navigation" class="mt-3">
+        <ul class="pagination justify-content-center">
+            <li class="page-item{% if not p_prev_url %} disabled{% endif %}">
+                <a class="page-link" href="{{ p_prev_url }}">
+                    &larr; Newer posts
+                </a>
+            </li>
+            <li class="page-item{% if not p_next_url %} disabled{% endif %}">
+                <a class="page-link" href="{{ p_next_url }}">
+                    Older posts &rarr;
+                </a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+</div>
 {% endblock %}

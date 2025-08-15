@@ -36,7 +36,10 @@ def index():
             is_approved=True if getattr(current_user, "is_admin", False) else False)
         db.session.add(post)
         db.session.commit()
-        flash(_('Your post is now live!'))
+        if current_user.is_admin:
+            flash(_('Your post is now live!'))
+        else:
+            flash(_('Your post is awaiting approval!'))
         return redirect(url_for('main.index'))
     
     # Show posts
@@ -103,7 +106,7 @@ def user(username):
     # Approved posts
     approved_query = user.posts.select().where(Post.is_approved.is_(True)).order_by(Post.timestamp.desc())
     approved_posts = db.paginate(approved_query, page=page,
-                        per_page=current_app.config['POSTS_PER_PAGE'],
+                        per_page=5,
                         error_out=False)
     next_url = url_for('main.user', username=user.username, page=approved_posts.next_num) \
         if approved_posts.has_next else None
@@ -112,15 +115,22 @@ def user(username):
     
     # Pending posts (only if the user is viewing their own profile)
     pending_posts = None
+    p_next_url = None
+    p_prev_url = None
+    p_page = request.args.get('p_page', 1, type=int)
     if user == current_user:
         pending_query = user.posts.select().where(Post.is_approved.is_(False)).order_by(Post.timestamp.desc())
-        pending_posts = db.paginate(pending_query, page=page, 
-                                    per_page=current_app.config['POSTS_PER_PAGE'],
+        pending_posts = db.paginate(pending_query, page=p_page, 
+                                    per_page=5,
                                     error_out=False)
+        p_next_url = url_for('main.user', username=user.username, page=pending_posts.next_num) \
+            if pending_posts.has_next else None
+        p_prev_url = url_for('main.user', username=user.username, page=pending_posts.prev_num) \
+            if pending_posts.has_prev else None
     
 
     form = EmptyForm()
-    return render_template('user.html', user=user, posts=approved_posts, pending_posts=pending_posts, form=form, next_url=next_url, prev_url=prev_url)
+    return render_template('user.html', user=user, posts=approved_posts, pending_posts=pending_posts, form=form, next_url=next_url, prev_url=prev_url, p_next_url=p_next_url, p_prev_url=p_prev_url)
 
 @bp.route('/edit_profile', methods=['GET', 'POST'])
 @login_required
