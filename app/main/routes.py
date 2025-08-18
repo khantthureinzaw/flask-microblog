@@ -7,7 +7,7 @@ import sqlalchemy as sa
 from langdetect import detect, LangDetectException
 from app import db
 from app.admin.forms import DeletePostForm
-from app.main.forms import CommentForm, EditProfileForm, EmptyForm, PostForm
+from app.main.forms import CommentForm, EditProfileForm, EmptyForm, PostForm, SearchForm
 from app.models import Comment, User, Post
 from app.translate import translate
 from app.main import bp
@@ -189,6 +189,41 @@ def unfollow(username):
         return redirect(url_for('main.user', username=username))
     else:
         return redirect(url_for('main.index'))
+    
+@bp.route('/search')
+def search():
+    form = SearchForm(request.args)
+    query = form.query.data
+    page = request.args.get('page', 1, type=int)
+    
+    post_query = sa.select(Post).where(
+        sa.and_(
+            Post.is_approved.is_(True),
+            sa.or_(
+                Post.title.ilike(f'%{query}%'),
+                Post.body.ilike(f'%{query}%')
+            )
+        )
+    ).order_by(Post.timestamp.desc())
+
+    posts = db.paginate(
+        post_query,
+        page=page,
+        per_page=current_app.config['POSTS_PER_PAGE'],
+        error_out=False
+    )
+
+    next_url = url_for('main.search', query=query, page=posts.next_num) if posts.has_next else None
+    prev_url = url_for('main.search', query=query, page=posts.prev_num) if posts.has_prev else None
+
+    return render_template(
+        'search_results.html',
+        posts=posts.items,
+        query=query,
+        next_url=next_url,
+        prev_url=prev_url,
+        form=form
+    )
 
 
 @bp.route('/translate', methods=['POST'])

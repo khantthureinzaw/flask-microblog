@@ -15,7 +15,23 @@
 <div class="card shadow-sm border-0">
     <div class="card-body">
         <h5 class="card-title mb-3">{{ _('Create a new post') }}</h5>
-        {{ wtf.quick_form(form) }}
+
+        <form method="post">
+            {{ form.hidden_tag() }}
+
+            <div class="mb-3">
+                {{ form.title.label(class="form-label") }}
+                {{ form.title(class="form-control") }}
+            </div>
+
+            <div class="mb-3">
+                <label for="editor" class="form-label">{{ _('Say something') }}</label>
+                <div id="editor" style="height: 150px;"></div>
+                <input type="hidden" name="post" id="hiddenPost">
+            </div>
+
+            {{ form.submit(class="btn btn-primary") }}
+        </form>
     </div>
 </div>
 {% endif %}

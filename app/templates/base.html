@@ -48,6 +48,12 @@
                         </a>
                     </li>
                 </ul>
+                <form class="d-flex ms-3" action="{{ url_for('main.search') }}" method="get">
+                    <input class="form-control form-control-sm me-2" type="search" name="query"
+                        placeholder="Search posts..." aria-label="Search" value="{{ request.args.get('query', '') }}">
+                    <button class="btn btn-sm btn-outline-primary" type="submit">Search</button>
+                </form>
+
                 <ul class="navbar-nav mb-2 mb-lg-0">
                     {% if current_user.is_anonymous %}
                     <li class="nav-item">
@@ -87,7 +93,10 @@
         {% with messages = get_flashed_messages() %}
         {% if messages %}
         {% for message in messages %}
-        <div class="alert alert-info alert-dismissible fade show" role="alert">{{ message }}</div>
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
         {% endfor %}
         {% endif %}
         {% endwith %}
