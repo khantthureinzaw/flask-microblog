@@ -172,7 +172,7 @@ def user(username):
     # Approved posts
     approved_query = user.posts.select().where(Post.is_approved.is_(True)).order_by(Post.timestamp.desc())
     approved_posts = db.paginate(approved_query, page=page,
-                        per_page=5,
+                        per_page=3,
                         error_out=False)
     next_url = url_for('main.user', username=user.username, page=approved_posts.next_num) \
         if approved_posts.has_next else None
@@ -187,11 +187,11 @@ def user(username):
     if user == current_user:
         pending_query = user.posts.select().where(Post.is_approved.is_(False)).order_by(Post.timestamp.desc())
         pending_posts = db.paginate(pending_query, page=p_page, 
-                                    per_page=5,
+                                    per_page=3,
                                     error_out=False)
-        p_next_url = url_for('main.user', username=user.username, page=pending_posts.next_num) \
+        p_next_url = url_for('main.user', username=user.username, p_page=pending_posts.next_num) \
             if pending_posts.has_next else None
-        p_prev_url = url_for('main.user', username=user.username, page=pending_posts.prev_num) \
+        p_prev_url = url_for('main.user', username=user.username, p_page=pending_posts.prev_num) \
             if pending_posts.has_prev else None
     
 

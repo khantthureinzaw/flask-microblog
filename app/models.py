@@ -22,7 +22,9 @@ class User(UserMixin, db.Model):
     username: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, unique=True)
     email: so.Mapped[str] = so.mapped_column(sa.String(120), index=True, unique=True)
     password_hash: so.Mapped[str | None] = so.mapped_column(sa.String(256))
-    is_admin: so.Mapped[bool] = so.mapped_column(default=False)
+    role: so.Mapped[str] = so.mapped_column(
+    sa.String(20), default="user", nullable=False
+    )
     posts: so.WriteOnlyMapped['Post'] = so.relationship(back_populates='author', cascade='all, delete-orphan')
     about_me: so.Mapped[str | None] = so.mapped_column(sa.String(140))
     last_seen: so.Mapped[datetime | None] = so.mapped_column(
@@ -105,6 +107,16 @@ class User(UserMixin, db.Model):
             .distinct(Post.id)
             .order_by(Post.timestamp.desc())
         )
+    
+    def is_admin(self) -> bool:
+        return self.role == "admin"
+
+    def is_analyst(self) -> bool:
+        return self.role == "analyst"
+    
+    def is_user(self) -> bool:
+        return self.role == 'user'
+
     
 class Post(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)

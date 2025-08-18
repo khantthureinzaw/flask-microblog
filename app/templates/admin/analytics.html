@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-secondary float-end">
+        {{ _('Back to Dashboard') }}
+    </a>
+    <h1 class="mb-4">Platform Analytics</h1>
+
+    <!-- Posts over Time -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header">
+            <h5 class="mb-0">Posts Over Time</h5>
+        </div>
+        <div class="card-body">
+            <canvas id="postsChart" height="100"></canvas>
+        </div>
+    </div>
+
+    <!-- Active Users -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header">
+            <h5 class="mb-0">Active Users Per Day</h5>
+        </div>
+        <div class="card-body">
+            <canvas id="activeUsersChart" height="100"></canvas>
+        </div>
+    </div>
+
+    <!-- Top Contributors -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header">
+            <h5 class="mb-0">Top Contributors</h5>
+        </div>
+        <div class="card-body">
+            <canvas id="topContributorsChart" height="120"></canvas>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const postsChart = new Chart(
+        document.getElementById('postsChart').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: {{ posts_per_day.keys() | list | tojson }},
+    datasets: [
+        {
+            label: 'Total Posts',
+            data: {{ posts_per_day.values() | list | tojson }},
+        borderColor: 'blue',
+        fill: false
+                },
+        {
+            label: 'Approved Posts',
+            data: {{ approved_per_day.values() | list | tojson }},
+        borderColor: 'green',
+        fill: false
+                },
+        {
+            label: 'Pending Posts',
+            data: {{ pending_per_day.values() | list | tojson }},
+        borderColor: 'orange',
+        fill: false
+                }
+    ]
+        }
+    });
+
+    const activeUsersChart = new Chart(
+        document.getElementById('activeUsersChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: {{ active_users_per_day.keys() | list | tojson }},
+    datasets: [{
+        label: 'Active Users',
+        data: {{ active_users_per_day.values() | list | tojson }},
+        backgroundColor: 'purple'
+            }]
+        }
+    });
+
+    const topContributorsChart = new Chart(
+        document.getElementById('topContributorsChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: {{ top_users | map(attribute = 0) | list | tojson }},
+    datasets: [{
+        label: 'Number of Posts',
+        data: {{ top_users | map(attribute = 1) | list | tojson }},
+        backgroundColor: 'teal'
+            }]
+        },
+    options: {
+        indexAxis: 'y' // makes it a horizontal bar chart (clearer for names)
+    }
+    });
+</script>
+{% endblock %}

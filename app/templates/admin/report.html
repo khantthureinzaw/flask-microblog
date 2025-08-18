@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Back Button & Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="fw-bold">{{ _('Platform Report') }}</h1>
+        <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-secondary">
+            {{ _('Back to Dashboard') }}
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <form class="row g-3 mb-4" method="get" action="{{ url_for('admin.report') }}">
+        <div class="col-md-3">
+            <label for="status" class="form-label">{{ _('Post Status') }}</label>
+            <select class="form-select" name="status" id="status">
+                <option value="all" {% if filter_status=='all' %}selected{% endif %}>{{ _('All') }}</option>
+                <option value="approved" {% if filter_status=='approved' %}selected{% endif %}>{{ _('Approved') }}
+                </option>
+                <option value="pending" {% if filter_status=='pending' %}selected{% endif %}>{{ _('Pending') }}</option>
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label for="user" class="form-label">{{ _('User') }}</label>
+            <input type="text" class="form-control" name="user" id="user" placeholder="{{ _('Username') }}"
+                value="{{ filter_user }}">
+        </div>
+
+        <div class="col-md-3">
+            <label for="order" class="form-label">{{ _('Order By') }}</label>
+            <select class="form-select" name="order" id="order">
+                <option value="timestamp_desc" {% if order=='timestamp_desc' %}selected{% endif %}>{{ _('Newest first')
+                    }}</option>
+                <option value="timestamp_asc" {% if order=='timestamp_asc' %}selected{% endif %}>{{ _('Oldest first') }}
+                </option>
+                <option value="title_asc" {% if order=='title_asc' %}selected{% endif %}>{{ _('Title A-Z') }}</option>
+                <option value="title_desc" {% if order=='title_desc' %}selected{% endif %}>{{ _('Title Z-A') }}</option>
+            </select>
+        </div>
+
+        <div class="col-md-3 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary me-2">{{ _('Apply Filters') }}</button>
+            <a href="{{ url_for('admin.export_report', status=filter_status, user=filter_user, order=order) }}"
+                class="btn btn-success">{{ _('Export CSV') }}</a>
+        </div>
+    </form>
+
+    <!-- Metrics Cards -->
+    <div class="row mb-4">
+        {% for title, value in [
+        (_('Total Posts'), metrics.total_posts),
+        (_('Pending Posts'), metrics.pending_posts),
+        (_('Users'), metrics.total_users),
+        (_('Posts with Images'), metrics.posts_with_images)
+        ] %}
+        <div class="col-md-3 mb-3">
+            <div class="card text-center shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">{{ title }}</h5>
+                    <p class="card-text fs-3">{{ value }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Posts Table -->
+    <div class="table-responsive shadow-sm">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>{{ _('Post ID') }}</th>
+                    <th>{{ _('Title') }}</th>
+                    <th>{{ _('Author') }}</th>
+                    <th>{{ _('Status') }}</th>
+                    <th>{{ _('Comments') }}</th>
+                    <th>{{ _('Timestamp') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for post in posts %}
+                <tr>
+                    <td>{{ post.id }}</td>
+                    <td>{{ post.title }}</td>
+                    <td>{{ post.author.username }}</td>
+                    <td>
+                        {% if post.is_approved %}
+                        <span class="badge bg-success">{{ _('Approved') }}</span>
+                        {% else %}
+                        <span class="badge bg-warning text-dark">{{ _('Pending') }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ post.comment_count() }}</td>
+                    <td>{{ moment(post.timestamp).format('LLL') }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted">{{ _('No posts found.') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if next_url or prev_url %}
+    <nav aria-label="Pagination" class="mt-3">
+        <ul class="pagination justify-content-center">
+            <li class="page-item {% if not prev_url %}disabled{% endif %}">
+                <a class="page-link" href="{{ prev_url }}">&larr; {{ _('Previous') }}</a>
+            </li>
+            <li class="page-item {% if not next_url %}disabled{% endif %}">
+                <a class="page-link" href="{{ next_url }}">{{ _('Next') }} &rarr;</a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

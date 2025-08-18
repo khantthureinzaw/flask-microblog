@@ -12,6 +12,12 @@
         {{ wtf.quick_form(form, action=url_for('main.edit_post', post_id=post.id), method='post', id='edit-post-form',
         novalidate=False) }}
 
+        <!-- Image preview -->
+        <div class="mt-3" id="image-preview-container" style="display: none;">
+            <p>{{ _('Image Preview:') }}</p>
+            <img id="image-preview" class="img-fluid" style="max-height: 300px;" />
+        </div>
+
         {% if post.image %}
         <div class="mt-3">
             <p>{{ _('Current Image:') }}</p>

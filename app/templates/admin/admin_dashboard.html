@@ -24,6 +24,16 @@
                             {{ _('All Users') }}
                         </a>
                     </li>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link" href="{{ url_for('admin.report') }}">
+                            {{ _('Report') }}
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link" href="{{ url_for('admin.analytics') }}">
+                            {{ _('Analytics') }}
+                        </a>
+                    </li>
                 </ul>
             </div>
         </nav>
@@ -78,7 +88,8 @@
                         </div>
                     </div>
                     <div class="btn-group btn-group-sm mt-2 mt-md-0">
-                        <form action="{{ url_for('admin.approve_post', post_id=post.id) }}" method="post" class="m-0">
+                        <form action="{{ url_for('admin.approve_post', post_id=post.id) }}" method="post"
+                            class="m-0 mx-1">
                             {{ form.hidden_tag() }}
                             <input type="hidden" name="next" value="{{ url_for('admin.admin_dashboard') }}">
                             <button type="submit" class="btn btn-success">{{ _('Approve') }}</button>
