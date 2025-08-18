@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% import "bootstrap_wtf.html" as wtf %}
+
+{% block content %}
+<h1>{{ _('Edit Post') }}</h1>
+
+<div class="card mb-3">
+    <div class="card-header">
+        {{ _('Editing:') }} <strong>{{ post.title }}</strong>
+    </div>
+    <div class="card-body">
+        {{ wtf.quick_form(form, action=url_for('main.edit_post', post_id=post.id), method='post', id='edit-post-form',
+        novalidate=False) }}
+
+        {% if post.image %}
+        <div class="mt-3">
+            <p>{{ _('Current Image:') }}</p>
+            <img src="{{ url_for('static', filename='uploads/' ~ post.image) }}" alt="{{ post.title }}"
+                class="img-fluid">
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<a href="{{ url_for('main.post_detail', post_id=post.id) }}" class="btn btn-secondary">{{ _('Back to Post') }}</a>
+{% endblock %}

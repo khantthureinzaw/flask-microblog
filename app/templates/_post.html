@@ -25,6 +25,14 @@
                 <p class="card-text text-muted">
                     {{ post.body | truncate(150, True, '...') }}
                 </p>
+
+                <!-- Post Image -->
+                {% if post.image %}
+                <div class="mt-3">
+                    <img src="{{ url_for('static', filename='uploads/' ~ post.image) }}" alt="Post image"
+                        class="img-fluid rounded shadow-sm" style="max-height: 400px; object-fit: cover;">
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>

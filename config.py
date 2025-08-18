@@ -18,3 +18,5 @@ class Config:
     LANGUAGES = ['en', 'es']
     MS_TRANSLATOR_KEY = os.environ.get('MS_TRANSLATOR_KEY')
     POSTS_PER_PAGE = 25
+    UPLOAD_FOLDER = os.path.join(basedir, "app/static/uploads")
+    ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}

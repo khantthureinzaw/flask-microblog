@@ -81,6 +81,8 @@ def create_app(config_class=Config):
         app.logger.setLevel(logging.INFO)
         app.logger.info('Microblog startup')
 
+        os.makedirs(current_app.config['UPLOAD_FOLDER'], exist_ok=True)
+
     return app
 
 

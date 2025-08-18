@@ -110,6 +110,7 @@ class Post(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     title: so.Mapped[str] = so.mapped_column(sa.String(200))
     body: so.Mapped[str] = so.mapped_column(sa.String(500))
+    image: so.Mapped[str | None] = so.mapped_column(sa.String(255), nullable=True)
     timestamp: so.Mapped[datetime] = so.mapped_column(
         index=True,
         default=lambda: datetime.now(timezone.utc)

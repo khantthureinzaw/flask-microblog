@@ -10,6 +10,9 @@
         <small class="text-muted">{{ _('by') }} {{ post.author.username }} - {{ post.timestamp }}</small>
     </div>
     <div class="card-body">
+        {% if post.image %}
+        <img src="{{ url_for('static', filename='uploads/' ~ post.image) }}" alt="Post image" class="img-fluid mb-3">
+        {% endif %}
         <p>{{ post.body }}</p>
     </div>
 </div>

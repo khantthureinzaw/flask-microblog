@@ -1,5 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, TextAreaField
+from flask_wtf.file import FileAllowed, FileField
 from wtforms.validators import ValidationError, DataRequired, Length
 import sqlalchemy as sa
 from flask_babel import _, lazy_gettext as _l
@@ -33,6 +34,7 @@ class PostForm(FlaskForm):
         DataRequired(),
         Length(min=1, max=500)
     ])
+    image = FileField(_l("Upload an image"), validators=[FileAllowed(["jpg", "jpeg", "png", "gif"], _l('Image only!'))])
     submit = SubmitField(_l('Post'))
 
 class CommentForm(FlaskForm):

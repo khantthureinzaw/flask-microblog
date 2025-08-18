@@ -12,6 +12,10 @@ from app.models import Comment, User, Post
 from app.translate import translate
 from app.main import bp
 
+import uuid
+import os
+from werkzeug.utils import secure_filename
+
 
 @bp.before_app_request
 def before_request():
@@ -34,6 +38,13 @@ def index():
             body=form.post.data, 
             author=current_user, 
             is_approved=True if getattr(current_user, "is_admin", False) else False)
+        
+        file = form.image.data
+        if file:
+            filename = f"{uuid.uuid4().hex}_{secure_filename(file.filename)}"
+            file.save(os.path.join(current_app.config["UPLOAD_FOLDER"], filename))
+            post.image = filename
+
         db.session.add(post)
         db.session.commit()
         if current_user.is_admin:
@@ -66,6 +77,61 @@ def post_detail(post_id):
     next_url = url_for('main.post_detail', page=comments.next_num) if comments.has_next else None
     prev_url = url_for('main.post_detail', page=comments.prev_num) if comments.has_prev else None
     return render_template('post_detail.html', title=post.title, post=post, form=form, delete_post=delete_post, comments=comments, next_url=next_url, prev_url=prev_url)
+
+@bp.route('/post/<int:post_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_post(post_id):
+    post = db.first_or_404(sa.select(Post).where(Post.id == post_id))
+    
+    # Only allow the author to edit
+    if post.author != current_user:
+        flash(_("You cannot edit someone else's post."))
+        return redirect(url_for('main.post_detail', post_id=post_id))
+    
+    form = PostForm()
+    
+    if request.method == 'GET':
+        form.title.data = post.title
+        form.post.data = post.body
+
+    if form.validate_on_submit():
+        post.title = form.title.data
+        post.body = form.post.data
+        
+        file = form.image.data
+        if file:
+            filename = f"{uuid.uuid4().hex}_{secure_filename(file.filename)}"
+            file.save(os.path.join(current_app.config["UPLOAD_FOLDER"], filename))
+            post.image = filename
+        
+        db.session.commit()
+        flash(_("Your post has been updated."))
+        return redirect(url_for('main.post_detail', post_id=post_id))
+    
+    return render_template('edit_post.html', title=_("Edit Post"), form=form, post=post)
+
+@bp.route('/post/<int:post_id>/delete', methods=['POST'])
+@login_required
+def delete_post(post_id):
+    post = db.first_or_404(sa.select(Post).where(Post.id == post_id))
+    
+    # Only allow the author to delete
+    if post.author != current_user:
+        flash(_("You cannot delete someone else's post."))
+        return redirect(url_for('main.post_detail', post_id=post_id))
+    
+    if post.image:
+        try:
+            os.remove(os.path.join(current_app.config["UPLOAD_FOLDER"], post.image))
+        except FileNotFoundError:
+            pass
+    
+    db.session.delete(post)
+    db.session.commit()
+    flash(_("Your post has been deleted."))
+    return redirect(url_for('main.index'))
+
+
 
 @bp.route('/post/<post_id>/comment', methods=['GET', 'POST'])
 @login_required
