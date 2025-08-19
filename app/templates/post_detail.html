@@ -14,7 +14,7 @@
                     </a> · {{ moment(post.timestamp).format('LLL') }}
                 </small>
             </div>
-            {% if current_user.is_admin %}
+            {% if current_user.is_admin() %}
             <form method="post" action="{{ url_for('admin.delete_post', post_id=post.id) }}">
                 {{ form.hidden_tag() }}
                 <input type="hidden" name="next" value="{{ url_for('admin.admin_dashboard') }}">

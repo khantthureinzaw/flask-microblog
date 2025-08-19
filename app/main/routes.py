@@ -37,7 +37,7 @@ def index():
             title=form.title.data, 
             body=form.post.data, 
             author=current_user, 
-            is_approved=True if getattr(current_user, "is_admin", False) else False)
+            is_approved=True if current_user.is_admin() else False)
         
         file = form.image.data
         if file:
@@ -47,7 +47,7 @@ def index():
 
         db.session.add(post)
         db.session.commit()
-        if current_user.is_admin:
+        if current_user.is_admin():
             flash(_('Your post is now live!'))
         else:
             flash(_('Your post is awaiting approval!'))

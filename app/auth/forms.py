@@ -40,6 +40,13 @@ class ResetPasswordRequestForm(FlaskForm):
     email = StringField(_l('Email'), validators=[DataRequired(), Email()])
     submit = SubmitField(_l('Request Password Reset'))
 
+    def validate_email(self, email):
+        user = db.session.scalar(
+            sa.select(User).where(User.email == email.data)
+        )
+        if user is not None:
+            raise ValidationError(_('No account with this username.'))
+
 
 class ResetPasswordForm(FlaskForm):
     password = PasswordField(_l('Password'), validators=[DataRequired()])

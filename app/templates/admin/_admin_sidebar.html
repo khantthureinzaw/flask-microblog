@@ -1,0 +1,39 @@
+<nav class="col-md-2 d-none d-md-block bg-light sidebar vh-100 shadow-sm">
+    <div class="position-sticky pt-3">
+        <ul class="nav flex-column">
+            <li class="nav-item mb-2">
+                <a class="nav-link fw-bold" href="{{ url_for('admin.admin_dashboard') }}">
+                    {{ _('Dashboard') }}
+                </a>
+            </li>
+            <li class="nav-item mb-2">
+                <a class="nav-link" href="{{ url_for('admin.all_posts') }}">
+                    {{ _('All Posts') }}
+                </a>
+            </li>
+            <li class="nav-item mb-2">
+                <a class="nav-link" href="{{ url_for('admin.all_users') }}">
+                    {{ _('All Users') }}
+                </a>
+            </li>
+            <li>
+                <hr>
+            </li>
+            <li class="nav-item mb-2">
+                <a class="nav-link" href="{{ url_for('admin.users_table') }}">
+                    {{ _('Users Report') }}
+                </a>
+            </li>
+            <li class="nav-item mb-2">
+                <a class="nav-link" href="{{ url_for('admin.report') }}">
+                    {{ _('Posts Report') }}
+                </a>
+            </li>
+            <li class="nav-item mb-2">
+                <a class="nav-link" href="{{ url_for('admin.analytics') }}">
+                    {{ _('Analytics') }}
+                </a>
+            </li>
+        </ul>
+    </div>
+</nav>

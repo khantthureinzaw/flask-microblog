@@ -4,6 +4,7 @@ from flask_login import login_required, current_user
 from flask_babel import _
 import sqlalchemy as sa
 import csv
+from io import StringIO
 
 from app import db
 from app.admin.forms import ApprovePostForm, CreateUserForm
@@ -17,68 +18,9 @@ def admin_or_analyst_required():
     flash(_('You do not have permission to access this page.'))
     return redirect(url_for('main.index'))
 
-@bp.route('/admin/all_posts')
-@login_required
-def all_posts():
-    if not current_user.is_admin():
-        return redirect(url_for('main.index'))
-    
-    page = request.args.get('page', 1, type=int)
-    status = request.args.get('status', 'all')
-
-    posts_query = sa.select(Post).order_by(Post.timestamp.desc())
-
-    if status ==  'approved':
-        posts_query = posts_query.where(Post.is_approved.is_(True))
-    elif status == 'pending':
-        posts_query = posts_query.where(Post.is_approved.is_(False))
-
-    posts = db.paginate(posts_query, page=page, per_page=current_app.config['POSTS_PER_PAGE'], error_out=False)
-    form = EmptyForm()
-    
-    next_url = url_for('admin.all_posts', page=posts.next_num) if posts.has_next else None
-    prev_url = url_for('admin.all_posts', page=posts.prev_num) if posts.has_prev else None
-    
-    return render_template(
-        'admin/all_posts.html',
-        title='All Posts',
-        posts=posts,
-        next_url=next_url,
-        prev_url=prev_url,
-        form=form,
-        status=status
-    )
-
-@bp.route('/admin/all_users')
-@login_required
-def all_users():
-    if not current_user.is_admin():
-        return redirect(url_for('main.index'))
-    
-    page = request.args.get('page', 1, type=int)
-    filter_username = request.args.get('page', '', type=str).strip()
-    filter_role = request.args.get('role', '', type=str).strip()
-
-    users_query = sa.select(User)
-    if filter_username:
-        users_query = users_query.where(User.username.ilike(f"%{filter_username}%"))
-    if filter_role:
-        users_query = users_query.where(User.role == filter_role)
-
-    users_query = users_query.order_by(User.username.asc())
-
-    users = db.paginate(users_query, page=page, per_page=current_app.config['POSTS_PER_PAGE'], error_out=False)
-    
-    next_url = url_for('admin.all_users', page=users.next_num) if users.has_next else None
-    prev_url = url_for('admin.all_users', page=users.prev_num) if users.has_prev else None
- 
-    return render_template(
-        'admin/all_users.html',
-        title='All Users',
-        users=users,
-        next_url=next_url,
-        prev_url=prev_url
-    )
+##################
+# Admin Routes
+##################
 
 @bp.route('/admin/dashboard', methods=['GET', 'POST'])
 @login_required
@@ -119,6 +61,71 @@ def admin_dashboard():
         total_users=total_users,
         active_today=active_today
     )
+
+@bp.route('/admin/all_posts')
+@login_required
+def all_posts():
+    if not current_user.is_admin():
+        return redirect(url_for('main.index'))
+    
+    page = request.args.get('page', 1, type=int)
+    status = request.args.get('status', 'all')
+
+    posts_query = sa.select(Post).order_by(Post.timestamp.desc())
+
+    if status ==  'approved':
+        posts_query = posts_query.where(Post.is_approved.is_(True))
+    elif status == 'pending':
+        posts_query = posts_query.where(Post.is_approved.is_(False))
+
+    posts = db.paginate(posts_query, page=page, per_page=current_app.config['POSTS_PER_PAGE'], error_out=False)
+    form = EmptyForm()
+    
+    next_url = url_for('admin.all_posts', page=posts.next_num) if posts.has_next else None
+    prev_url = url_for('admin.all_posts', page=posts.prev_num) if posts.has_prev else None
+    
+    return render_template(
+        'admin/all_posts.html',
+        title='All Posts',
+        posts=posts,
+        next_url=next_url,
+        prev_url=prev_url,
+        form=form,
+        status=status
+    )
+
+@bp.route('/admin/all_users')
+@login_required
+def all_users():
+    if not current_user.is_admin():
+        return redirect(url_for('main.index'))
+    
+    page = request.args.get('page', 1, type=int)
+    filter_username = request.args.get('username', '', type=str).strip()
+    filter_role = request.args.get('role', '', type=str).strip()
+
+    users_query = sa.select(User)
+    if filter_username:
+        users_query = users_query.where(User.username.ilike(f"%{filter_username}%"))
+    if filter_role:
+        users_query = users_query.where(User.role == filter_role)
+
+    users_query = users_query.order_by(User.username.asc())
+
+    users = db.paginate(users_query, page=page, per_page=current_app.config['POSTS_PER_PAGE'], error_out=False)
+    
+    next_url = url_for('admin.all_users', page=users.next_num) if users.has_next else None
+    prev_url = url_for('admin.all_users', page=users.prev_num) if users.has_prev else None
+ 
+    return render_template(
+        'admin/all_users.html',
+        title='All Users',
+        users=users,
+        next_url=next_url,
+        prev_url=prev_url
+    )
+
+# Approve / Delete Posts & Comments (Admin Only)
 
 @bp.route('/admin/approve_post/<int:post_id>', methods=['POST'])
 @login_required
@@ -184,6 +191,135 @@ def admin_post_detail(post_id):
         form=form
     )
 
+# Create / Delete Users (Admin Only)
+
+@bp.route('/admin/users/create', methods=['GET', 'POST'])
+@login_required
+def create_user():
+    if not current_user.is_admin():
+        flash('Permission denied.')
+        return redirect(url_for('main.index'))
+    
+    form = CreateUserForm()
+    if form.validate_on_submit():
+        user = User(
+            username=form.username.data,
+            email=form.email.data,
+            role=form.role.data
+        )
+        user.set_password(form.password.data)
+        db.session.add(user)
+        db.session.commit()
+        flash(f'User {user.username} created successfully.')
+        return redirect(url_for('admin.all_users'))
+    
+    return render_template('admin/create_user.html', form=form, title='Create User')
+
+@bp.route('/admin/users/delete/<int:user_id>', methods=['POST'])
+@login_required
+def delete_user(user_id):
+    if not current_user.is_admin():
+        flash('Permission denied.')
+        return redirect(url_for('main.index'))
+
+    user = db.session.get(User, user_id)
+    if not user:
+        flash('User not found.')
+        return redirect(url_for('admin.all_users'))
+
+    # Protect the "original admin" (first admin)
+    first_admin = db.session.scalar(sa.select(User).where(User.role=='admin').order_by(User.id.asc()))
+    if user.id == first_admin.id:
+        flash('Cannot delete the original admin.')
+        return redirect(url_for('admin.all_users'))
+    elif user.id == current_user.id:
+        flash('You cannot delete yourself.')
+        return redirect(url_for('admin.all_users'))
+
+    try:
+        db.session.delete(user)
+        db.session.commit()
+        flash(f'User {user.username} deleted.')
+    except Exception as e:
+        db.session.rollback()
+        print(e)
+        flash(f'Error deleting user: {str(e)}')
+    return redirect(url_for('admin.all_users'))
+
+##################
+# Analyst routes
+##################
+@bp.route('/admin/users_table')
+@login_required
+def users_table():
+    resp = admin_or_analyst_required()
+    if resp:
+        return resp
+
+    username = request.args.get('username', '').strip()
+    role = request.args.get('role', '').strip()
+
+    query = User.query
+    if username:
+        query = query.filter(User.username.ilike(f'%{username}%'))
+    if role:
+        query = query.filter_by(role=role)
+
+    page = request.args.get('page', 1, type=int)
+    users = query.order_by(User.id.asc()).paginate(
+        page=page, per_page=current_app.config['POSTS_PER_PAGE'], error_out=False
+    )
+
+    metrics = {
+        'total': db.session.scalar(sa.select(sa.func.count(User.id))),
+        'admins': db.session.scalar(sa.select(sa.func.count(User.id)).where(User.role == 'admin')),
+        'analysts': db.session.scalar(sa.select(sa.func.count(User.id)).where(User.role == 'analyst')),
+        'users': db.session.scalar(sa.select(sa.func.count(User.id)).where(User.role == 'user')),
+    }
+
+    next_url = url_for('admin.users_table', page=users.next_num, username=username, role=role) if users.has_next else None
+    prev_url = url_for('admin.users_table', page=users.prev_num, username=username, role=role) if users.has_prev else None
+
+    return render_template('admin/users_table.html', users=users, next_url=next_url, prev_url=prev_url, metrics=metrics)
+
+@bp.route('/admin/export_users')
+@login_required
+def export_users():
+    resp = admin_or_analyst_required()
+    if resp:
+        return resp
+    
+    filter_username = request.args.get('username', '', type=str).strip()
+    filter_role = request.args.get('role', '', type=str).strip()
+
+    users_query = sa.select(User)
+    if filter_username:
+        users_query = users_query.where(User.username.ilike(f"%{filter_username}%"))
+    if filter_role:
+        users_query = users_query.where(User.role == filter_role)
+
+    users_query = users_query.order_by(User.id.asc())
+    users = db.session.execute(users_query).scalars().all()
+
+    si = StringIO()
+    writer = csv.writer(si)
+    writer.writerow(["ID", "Username", "Email", "Role", "Last Seen", "Followers Count", "Following Count"])
+
+    for user in users:
+        writer.writerow([
+            user.id,
+            user.username,
+            user.email,
+            user.role,
+            user.last_seen.strftime("%Y-%m-%d %H:%M:%S") if user.last_seen else "",
+            user.followers_count(),
+            user.following_count()
+        ])
+
+    output = Response(si.getvalue(), mimetype="text/csv")
+    output.headers["Content-Disposition"] = "attachment; filename=users_export.csv"
+    return output 
+
 @bp.route('/admin/report')
 @login_required
 def report():
@@ -238,10 +374,9 @@ def report():
                            metrics=metrics,
                            filter_status=filter_status,
                            filter_user=filter_user,
+                           order=order,
                            next_url=next_url,
                            prev_url=prev_url)
-
-from io import StringIO
 
 @bp.route('/admin/report/export')
 @login_required
@@ -279,25 +414,23 @@ def export_report():
     posts = db.session.scalars(query).all()
 
     # Generate CSV
-    def generate():
-        output = []
-        header = ['Post ID', 'Title', 'Author', 'Status', 'Comments', 'Timestamp']
-        output.append(','.join(header))
-        for post in posts:
-            row = [
-                str(post.id),
-                post.title.replace(',', ' '),
-                post.author.username,
-                'Approved' if post.is_approved else 'Pending',
-                str(post.comment_count()),
-                post.timestamp.isoformat()
-            ]
-            output.append(','.join(row))
-        return '\n'.join(output)
+    si = StringIO()
+    writer = csv.writer(si)
+    writer.writerow(['Post ID', 'Title', 'Author', 'Status', 'Comments', 'Timestamp'])
+    for post in posts:
+        writer.writerow([
+            post.id,
+            post.title.replace(',', ' '),
+            post.author.username,
+            'Approved' if post.is_approved else 'Pending',
+            post.comment_count(),
+            post.timestamp.strftime("%Y-%m-%d %H:%M:%S") if post.timestamp else ''
+        ])
 
-    csv_file = Response(generate(), mimetype='text/csv')
-    csv_file.headers["Content-Disposition"] = "attachment; filename=platform_report.csv"
-    return csv_file
+    output = Response(si.getvalue(), mimetype="text/csv")
+    output.headers["Content-Disposition"] = "attachment; filename=users_export.csv"
+    return output
+
 
 @bp.route('/admin/analytics')
 @login_required
@@ -351,55 +484,3 @@ def analytics():
         active_users_per_day=active_users_per_day,
         top_users=top_users
     )
-
-@bp.route('/admin/users/create', methods=['GET', 'POST'])
-@login_required
-def create_user():
-    if not current_user.is_admin():
-        flash('Permission denied.')
-        return redirect(url_for('main.index'))
-    
-    form = CreateUserForm()
-    if form.validate_on_submit():
-        user = User(
-            username=form.username.data,
-            email=form.email.data,
-            role=form.role.data
-        )
-        user.set_password(form.password.data)
-        db.session.add(user)
-        db.session.commit()
-        flash(f'User {user.username} created successfully.')
-        return redirect(url_for('admin.all_users'))
-    
-    return render_template('admin/create_user.html', form=form, title='Create User')
-
-@bp.route('/admin/users/delete/<int:user_id>', methods=['POST'])
-@login_required
-def delete_user(user_id):
-    if not current_user.is_admin():
-        flash('Permission denied.')
-        return redirect(url_for('main.index'))
-
-    user = db.session.get(User, user_id)
-    if not user:
-        flash('User not found.')
-        return redirect(url_for('admin.all_users'))
-
-    # Protect the "original admin" (first admin)
-    first_admin = db.session.scalar(sa.select(User).where(User.role=='admin').order_by(User.id.asc()))
-    if user.id == first_admin.id:
-        flash('Cannot delete the original admin.')
-        return redirect(url_for('admin.all_users'))
-    elif user.id == current_user.id:
-        flash('You cannot delete yourself.')
-        return redirect(url_for('admin.all_users'))
-
-    try:
-        db.session.delete(user)
-        db.session.commit()
-        flash(f'User {user.username} deleted.')
-    except Exception as e:
-        db.session.rollback()
-        flash('Error deleting user.')
-    return redirect(url_for('admin.all_users'))

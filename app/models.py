@@ -25,7 +25,7 @@ class User(UserMixin, db.Model):
     role: so.Mapped[str] = so.mapped_column(
     sa.String(20), default="user", nullable=False
     )
-    posts: so.WriteOnlyMapped['Post'] = so.relationship(back_populates='author', cascade='all, delete-orphan')
+    posts: so.WriteOnlyMapped['Post'] = so.relationship(back_populates='author', cascade='all, delete-orphan', passive_deletes=True)
     about_me: so.Mapped[str | None] = so.mapped_column(sa.String(140))
     last_seen: so.Mapped[datetime | None] = so.mapped_column(
         default=lambda: datetime.now(timezone.utc)
@@ -33,14 +33,16 @@ class User(UserMixin, db.Model):
     following: so.WriteOnlyMapped['User'] = so.relationship(
         secondary=followers, primaryjoin=(followers.c.follower_id == id),
         secondaryjoin=(followers.c.followed_id == id),
-        back_populates='followers'
+        back_populates='followers',
+        passive_deletes=True
     )
     followers: so.WriteOnlyMapped['User'] = so.relationship(
         secondary=followers, primaryjoin=(followers.c.followed_id == id),
         secondaryjoin=(followers.c.follower_id == id),
-        back_populates='following'
+        back_populates='following',
+        passive_deletes=True
     )
-    comments: so.WriteOnlyMapped['Comment'] = so.relationship(back_populates='author', cascade='all, delete-orphan')
+    comments: so.WriteOnlyMapped['Comment'] = so.relationship(back_populates='author', cascade='all, delete-orphan', passive_deletes=True)
 
     def __repr__(self) -> str:
         return f'<User {self.username}>'

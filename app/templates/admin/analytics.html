@@ -2,9 +2,11 @@
 
 {% block content %}
 <div class="container py-4">
-    <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-secondary float-end">
+    {% if current_user.is_admin() %}
+    <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-secondary">
         {{ _('Back to Dashboard') }}
     </a>
+    {% endif %}
     <h1 class="mb-4">Platform Analytics</h1>
 
     <!-- Posts over Time -->

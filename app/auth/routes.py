@@ -30,7 +30,7 @@ def login():
         if current_user.is_admin():
             return redirect(url_for('admin.admin_dashboard'))
         elif current_user.is_analyst():
-            return redirect(url_for('admin.report'))
+            return redirect(url_for('admin.analytics'))
         else:
             if not next_page or urlsplit(next_page).netloc != '':
                 next_page = url_for('main.index')
