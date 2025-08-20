@@ -431,7 +431,6 @@ def export_report():
     output.headers["Content-Disposition"] = "attachment; filename=users_export.csv"
     return output
 
-
 @bp.route('/admin/analytics')
 @login_required
 def analytics():
