@@ -25,4 +25,8 @@ build/
 *.log 
 logs/
 
+# Database files
+app.db
+*.sqlite3
+
 messages.pot

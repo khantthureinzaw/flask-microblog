@@ -118,20 +118,29 @@ The schema consists of four main tables:
     ```
     > ⚠️ The migrations/ folder already includes the initial migration, so running flask db upgrade is enough. If starting fresh without migrations, run `flask db init` and `flask db migrate -m "Initial migration"` first.
 
-5. **Run the application**
+5. **Creating the Default Admin User**
+  - After applying migrations, create the initial admin account using the included helper script:
+
+    ```bash
+    python create_admin.py
+    ```
+    By default, this script creates an admin account with:
+    - **Username**: `admin`
+    - **Password**: `admin`
+    - **Email**: `admin@example.com`
+
+    > ⚠️ Important: These values are only provided as defaults. You should change the username, password, and email inside create_admin.py before running it, or update them immediately after logging in. Leaving the defaults is a serious security risk.
+
+6. **Run the application**
     ```bash
     flask run
     ```
 
-6. **Access the app**
+7. **Access the app**
     - Open your browser and go to: http://127.0.0.1:5000/
+    > ⚠️ The login form is the same for all roles. After logging in, the available pages differ based on the user’s role (User, Analyst, Admin).
 
-### 🔑 Default Credentials
-- Username: `admin`
-- Password: `admin`
-- Email: `admin@example.com`
-
-> ⚠️ The login form is the same for all roles. After logging in, the available pages differ based on the user’s role (User, Analyst, Admin).
+  
 
 ## 👤 Roles & Permissions
 
