@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta, timezone
-from flask import current_app, render_template, redirect, url_for, flash, request, Response
+import os
+from flask import current_app, render_template, redirect, send_file, url_for, flash, request, Response
+from flask.cli import F
 from flask_login import login_required, current_user
 from flask_babel import _
 import sqlalchemy as sa
@@ -124,6 +126,20 @@ def all_users():
         next_url=next_url,
         prev_url=prev_url
     )
+
+@bp.route('/admin/download_readme')
+@login_required
+def download_readme():
+    if not current_user.is_admin():
+        return redirect(url_for('main.index'))
+    
+    project_root = os.path.abspath(os.path.join(current_app.root_path, '..'))
+    file_path = os.path.join(project_root, 'Microblog_Docs.pdf')
+
+    if not os.path.exists(file_path):
+        return 
+
+    return send_file(file_path, as_attachment=True)
 
 # Approve / Delete Posts & Comments (Admin Only)
 

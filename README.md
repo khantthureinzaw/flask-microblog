@@ -6,42 +6,42 @@ The platform also provides administrative and analytical tools for managing user
 
 ## Features
 
-- **Public Access**
+- **🌐 Public Access**
   - Explore page available without login (lists all approved posts).
 
-- **User Roles**
+- **🔑 User Roles**
   - **User**: Can create posts (requires admin approval), follow other users, and comment on posts.
   - **Admin**: Full control of the system. Can approve posts, manage users, delete posts, and access analytics/reports.
   - **Analyst**: Read-only access to analytics and reporting tools (no user or post management).
 
-- **Posts & Comments**
+- **📝 Posts & Comments**
   - Users can create posts with optional images.
   - Posts require admin approval before appearing on the public feed.
   - Users can comment on posts, with each comment tied to one user and one post.
 
-- **Followers**
+- **👥 Followers**
   - Users can follow each other to see posts in their personal feed.
 
-- **Admin Dashboard**
+- **🛠️ Admin Dashboard**
   - Manage pending posts, users, and roles.
   - Ensure at least one admin always exists (original admin cannot be deleted).
   - Export posts and user data to CSV.
   - Filter and search for specific posts or users.
 
-- **Role-based Access Control**
+- **🛡️ Role-based Access Control**
   - Access to pages and functionality differs based on role.
   - Single login form for all roles; landing pages differ by role.
 
-## Analytics & Reporting
+## 📊 Analytics & Reporting
 Microblog provides powerful reporting tools for admins and analysts:
 
-- **Reports**
+- **📄 Reports**
     - View all posts or users in a searchable and filterable table.
     - Filter posts by status (approved/pending), title, or author.
     - Filter users by role or username.
     - Pagination for large datasets.
 
-- **Analytics**
+- **📈 Analytics**
     - Summary metrics such as:
         - Total posts
         - Pending posts
@@ -49,16 +49,17 @@ Microblog provides powerful reporting tools for admins and analysts:
         - Posts with images
     - Visual representation of user engagement and user activity.
 
-- **Export**
+- **💾 Export**
     - Both posts and users can be exported to CSV files.
     - Exports respect applied filters.
     - Admins and analysts can download full datasets for offline analysis.
 
 > ⚠️ Note: Only admins can manage posts, users, and roles. Analysts have read-only access to reporting and analytics.
 
-## Database Structure
+## 🗄️ Database Structure
 
 The application uses **SQLite** by default with **SQLAlchemy ORM** for database management. 
+
 ![Microblog ER Diagram](microblog_erd.png) 
 The schema consists of four main tables:
 
@@ -85,7 +86,7 @@ The schema consists of four main tables:
   - `follower_id`, `following_id`
   - Self-referential relationship enabling users to follow each other
 
-## Installation & Setup
+## 💻 Installation & Setup
 
 ### Prerequisites
 - Python **3.10+**
@@ -95,7 +96,7 @@ The schema consists of four main tables:
 
 1. **Clone the repository**
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/khantthureinzaw/flask-microblog.git
    cd microblog
    ```
 
@@ -125,14 +126,14 @@ The schema consists of four main tables:
 6. **Access the app**
     - Open your browser and go to: http://127.0.0.1:5000/
 
-### Default Credentials
+### 🔑 Default Credentials
 - Username: `admin`
 - Password: `admin`
 - Email: `admin@example.com`
 
 > ⚠️ The login form is the same for all roles. After logging in, the available pages differ based on the user’s role (User, Analyst, Admin).
 
-## Roles & Permissions
+## 👤 Roles & Permissions
 
 Microblog has three types of users, each with different access levels:
 
@@ -156,7 +157,7 @@ Microblog has three types of users, each with different access levels:
    - Can delete users (except the original admin).
    - Can access **Report** and **Analytics** pages with full filtering and CSV export.
 
-## Project Structure
+## 🗂️ Project Structure
 ```
 microblog/
 ├── app/
@@ -173,7 +174,7 @@ microblog/
 └── config.py
 ```
 
-## Additional Information
+## ℹ️ Additional Information
 ### Virtual Environment
 Always run the app inside a virtual environment to manage dependencies safely.
 
