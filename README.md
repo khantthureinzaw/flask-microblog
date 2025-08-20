@@ -97,7 +97,7 @@ The schema consists of four main tables:
 1. **Clone the repository**
    ```bash
    git clone https://github.com/khantthureinzaw/flask-microblog.git
-   cd microblog
+   cd flask-microblog
    ```
 
 2. **Create and activate a virtual environment**
@@ -118,8 +118,8 @@ The schema consists of four main tables:
     ```
     > ⚠️ The migrations/ folder already includes the initial migration, so running flask db upgrade is enough. If starting fresh without migrations, run `flask db init` and `flask db migrate -m "Initial migration"` first.
 
-5. **Creating the Default Admin User**
-  - After applying migrations, create the initial admin account using the included helper script:
+5. **Create the Default Admin User**
+    - After applying migrations, create the initial admin account using the included helper script:
 
     ```bash
     python create_admin.py
@@ -129,7 +129,7 @@ The schema consists of four main tables:
     - **Password**: `admin`
     - **Email**: `admin@example.com`
 
-    > ⚠️ Important: These values are only provided as defaults. You should change the username, password, and email inside create_admin.py before running it, or update them immediately after logging in. Leaving the defaults is a serious security risk.
+    > ⚠️ Important: Update the default username, password, and email in create_admin.py (or change them immediately after first login). Leaving defaults is a security risk.
 
 6. **Run the application**
     ```bash
@@ -168,7 +168,7 @@ Microblog has three types of users, each with different access levels:
 
 ## 🗂️ Project Structure
 ```
-microblog/
+flask-microblog/
 ├── app/
 │ ├── admin/          # Admin blueprints (forms, routes)
 │ ├── auth/           # Authentication blueprints
@@ -196,4 +196,4 @@ Make sure to run `flask db upgrade` before starting the application to create th
 
 ### Personal / Educational Use
 - This project is intended for personal learning and experimentation.
-- No license is included.
+  > ⚠️ No license has been provided. This project is for personal and educational use only.
